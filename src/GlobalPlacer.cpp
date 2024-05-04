@@ -32,7 +32,7 @@ void GlobalPlacer::place() {
 
     // Perform optimization, the termination condition is that the number of iterations reaches 100
     // TODO: You may need to change the termination condition, which is determined by the overflow ratio.
-    for (size_t i = 0; i < 100; ++i) {
+    for (size_t i = 0; i < 50; ++i) {
         optimizer.Step();
         printf("iter = %3lu, f = %9.4f, x = %9.4f, y = %9.4f\n", i, foo(t), t[0].x, t[0].y);
     }
@@ -41,9 +41,22 @@ void GlobalPlacer::place() {
     // Global placement algorithm
     ////////////////////////////////////////////////////////////////////
 
+
+
     // TODO: Implement your global placement algorithm here.
     const size_t num_modules = _placement.numModules();  // You may modify this line.
     std::vector<Point2<double>> positions(num_modules);  // Optimization variables (positions of modules). You may modify this line.
+    for(int i = 0; i < num_modules; i++){
+        positions[i].x = rand()%1000;
+        positions[i].y = rand()%1000;
+    }
+    Wirelength wirelength(_placement);
+    SimpleConjugateGradient optimizer_wirelength(wirelength, positions, 0.01);
+    optimizer_wirelength.Initialize();
+    for(int i = 0; i < 100; i++){
+        optimizer_wirelength.Step();
+        printf("iter = %3lu, f = %9.4f\n, x = %9.4f, y = %9.4f", i, wirelength(positions) , positions[0].x, positions[0].y);
+    }
 
     ////////////////////////////////////////////////////////////////////
     // Write the placement result into the database. (You may modify this part.)

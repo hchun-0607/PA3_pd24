@@ -79,23 +79,24 @@ class ExampleFunction : public BaseFunction {
  */
 class Wirelength : public BaseFunction {
     // TODO: Implement the wirelength function, add necessary data members for caching
-    Wirelength(Placement &placement);
+    
 
    public:
     /////////////////////////////////
     // Methods
     /////////////////////////////////
-
+    Wirelength(Placement &placement);
     const double &operator()(const std::vector<Point2<double>> &input) override;
     const std::vector<Point2<double>> &Backward() override;
 
     private:
-    double gamma;
+    double gamma = 1000.;
     std::vector<Point2<double>> input_;
     vector<double> exp_xi_gamma;
     vector<double> exp_yi_gamma;
     Placement &placement;
     size_t input_size;
+    vector<vector<int>> pin_netlist;
 
 };
 
@@ -104,13 +105,27 @@ class Wirelength : public BaseFunction {
  */
 class Density : public BaseFunction {
     // TODO: Implement the density function, add necessary data members for caching
+    
    public:
     /////////////////////////////////
     // Methods
     /////////////////////////////////
-
+    Density(Placement &placement, double max_density, int num_bins_x, int num_bins_y,vector<Point2<double>> input);
     const double &operator()(const std::vector<Point2<double>> &input) override;
     const std::vector<Point2<double>> &Backward() override;
+
+    private:
+    double max_density;
+    vector<vector<double>> density_map;
+    Placement &placement;
+    int num_bins_x;
+    int num_bins_y;
+    vector<Point2<double>> input_;
+    double bin_size_x;
+    double bin_size_y;
+    vector<vector<pair<double,double>>> center;
+    vector<Point2<double>> input_;
+    vector<vector<double>> density_diff_map;
 };
 
 /**
@@ -127,6 +142,7 @@ class ObjectiveFunction : public BaseFunction {
    public:
     /////////////////////////////////
     // Methods
+    ObjectiveFunction(Placement &placement, double lambda);
     /////////////////////////////////
 
     const double &operator()(const std::vector<Point2<double>> &input) override;
@@ -135,6 +151,9 @@ class ObjectiveFunction : public BaseFunction {
    private:
     Wirelength wirelength_;
     Density density_;
+    double lambda_;
+    Placement &placement_;
+    vector<Point2<double>> input_;
 };
 
 #endif  // OBJECTIVEFUNCTION_H
