@@ -14,6 +14,7 @@ SimpleConjugateGradient::SimpleConjugateGradient(BaseFunction &obj,
 void SimpleConjugateGradient::Initialize() {
     // Before the optimization starts, we need to initialize the optimizer.
     step_ = 0;
+    cout<<"optimizer initialize.."<<endl;
 }
 
 /**
@@ -21,6 +22,8 @@ void SimpleConjugateGradient::Initialize() {
  */
 void SimpleConjugateGradient::Step() {
     const size_t &kNumModule = var_.size();
+    cout<<"here///"<<endl;
+    
 
     // Compute the gradient direction
     obj_(var_);       // Forward, compute the function value and cache from the input
@@ -30,6 +33,7 @@ void SimpleConjugateGradient::Step() {
     double beta;                                  // Polak-Ribiere coefficient
     std::vector<Point2<double>> dir(kNumModule);  // conjugate directions
     if (step_ == 0) {
+        cout<<"here.."<<endl;
         // For the first step, we will set beta = 0 and d_0 = -g_0
         beta = 0.;
         for (size_t i = 0; i < kNumModule; ++i) {

@@ -110,12 +110,12 @@ class Density : public BaseFunction {
     /////////////////////////////////
     // Methods
     /////////////////////////////////
-    Density(Placement &placement, double max_density, int num_bins_x, int num_bins_y,vector<Point2<double>> input);
+    Density(Placement &placement, double max_density, int num_bins_x, int num_bins_y);
     const double &operator()(const std::vector<Point2<double>> &input) override;
     const std::vector<Point2<double>> &Backward() override;
 
     private:
-    double max_density;
+    double max_density = 1;
     vector<vector<double>> density_map;
     Placement &placement;
     int num_bins_x;
@@ -124,7 +124,6 @@ class Density : public BaseFunction {
     double bin_size_x;
     double bin_size_y;
     vector<vector<pair<double,double>>> center;
-    vector<Point2<double>> input_;
     vector<vector<double>> density_diff_map;
 };
 

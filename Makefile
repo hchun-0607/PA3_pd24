@@ -7,7 +7,9 @@ OBJECTS=$(SOURCES:.c=.o)
 EXECUTABLE=place
 
 all: $(SOURCES) bin/$(EXECUTABLE)
-	
+
+
+
 bin/$(EXECUTABLE): $(OBJECTS)
 	$(CC) $(OBJECTS) $(CXXFLAGS) $(LDFLAGS) -o $@
 

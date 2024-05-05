@@ -110,7 +110,7 @@ const std::vector<Point2<double>> &Wirelength::Backward(){
     return grad_;
 }
 
-Density::Density(Placement &placement, double max_density, int num_bins_x, int num_bins_y,vector<Point2<double>> input) : BaseFunction(placement.numModules()), placement(placement), max_density(max_density), num_bins_x(num_bins_x), num_bins_y(num_bins_y), input_(input){
+Density::Density(Placement &placement, double max_density, int num_bins_x, int num_bins_y) : BaseFunction(placement.numModules()), placement(placement), max_density(max_density), num_bins_x(num_bins_x), num_bins_y(num_bins_y){
     bin_size_x = (placement.boundryRight() - placement.boundryLeft()) / num_bins_x;
     bin_size_y = (placement.boundryTop() - placement.boundryBottom()) / num_bins_y;
     density_map.resize(num_bins_x);
@@ -126,6 +126,7 @@ Density::Density(Placement &placement, double max_density, int num_bins_x, int n
     }
 }
 const double &Density::operator()(const std::vector<Point2<double>> &input){
+    cout<<"checkpoint2"<<endl;
     value_ = 0;
     for(int i = 0; i < num_bins_x; i++){
         for(int j = 0; j < num_bins_y; j++){
@@ -172,6 +173,7 @@ const double &Density::operator()(const std::vector<Point2<double>> &input){
         }
     }
     input_ = input;
+    cout<<"density value....  "<<value<<endl;
     return value_;
 }
 
@@ -187,6 +189,7 @@ const std::vector<Point2<double>> &Density::Backward(){
             density_diff_map[i][j] = 0;
         }
     }
+    grad_.clear();
     grad_.resize(placement.numModules());
     for(int i = 0 ;i < placement.numModules(); ++i){
         for(int j = 0; j < num_bins_x; j++){
@@ -235,7 +238,7 @@ const std::vector<Point2<double>> &Density::Backward(){
 }
 ObjectiveFunction::ObjectiveFunction(Placement &placement, double lambda)
     :  BaseFunction(placement.numModules()),placement_(placement), lambda_(lambda), wirelength_(placement), 
-      density_(placement, 1, 10, 10, std::vector<Point2<double>>(placement.numModules())) {
+      density_(placement, 1, 10, 10) {
     grad_.resize(placement.numModules());
     for(int i = 0; i < placement.numModules(); i++){
         grad_[i].x = 0;
@@ -244,10 +247,11 @@ ObjectiveFunction::ObjectiveFunction(Placement &placement, double lambda)
 }
 
 const double& ObjectiveFunction::operator()(const std::vector<Point2<double>> &input){
-    double value = 0;
-    value += wirelength_(input);
-    value += lambda_ * density_(input);
-    return value;
+    value_ = 0;
+    value_ += wirelength_(input);
+    value_ += lambda_ * density_(input);
+    cout<<"compute value..."<<endl;
+    return value_;
 }
 const std::vector<Point2<double>>& ObjectiveFunction::Backward(){
     for(int i = 0; i < placement_.numModules(); i++){
@@ -260,6 +264,7 @@ const std::vector<Point2<double>>& ObjectiveFunction::Backward(){
         grad_[i].x += lambda_ * density_.Backward()[i].x;
         grad_[i].y += lambda_ * density_.Backward()[i].y;
     }
+    cout<<"compute grdient..."<<endl;
     return grad_;
 }
 

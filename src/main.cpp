@@ -96,7 +96,7 @@ int main(int argc, char *argv[])
 		GlobalPlacer globalPlacer(placement);
 		globalPlacer.place();
         cout<<"Global placement done!"<<endl;
-		globalPlacer.plotPlacementResult( "init.plt" );
+		//globalPlacer.plotPlacementResult( "init.plt" );
 
 		/////////////////////////////////////////////////
 		

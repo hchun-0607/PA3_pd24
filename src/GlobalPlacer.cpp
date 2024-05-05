@@ -50,13 +50,40 @@ void GlobalPlacer::place() {
         positions[i].x = rand()%1000;
         positions[i].y = rand()%1000;
     }
-    Wirelength wirelength(_placement);
-    SimpleConjugateGradient optimizer_wirelength(wirelength, positions, 0.01);
-    optimizer_wirelength.Initialize();
-    for(int i = 0; i < 100; i++){
-        optimizer_wirelength.Step();
-        printf("iter = %3lu, f = %9.4f\n, x = %9.4f, y = %9.4f", i, wirelength(positions) , positions[0].x, positions[0].y);
+    bool check_wire = 0;
+    bool check_density = 1;
+    bool check_costfunction = 0;
+    if(check_wire){
+        Wirelength wirelength_(_placement);
+        SimpleConjugateGradient optimizer_wire(wirelength_, positions, 0.01);
+        optimizer_wire.Initialize();
+        for(int i = 0; i < 50; i++){
+            optimizer_wire.Step();
+            printf("iter = %3lu, f = %9.4f\n, x = %9.4f, y = %9.4f", i, wirelength_(positions) , positions[0].x, positions[0].y);
+        }
     }
+    if(check_density){
+        Density density_(_placement, 0.8, 100, 100);
+        SimpleConjugateGradient optimizer_density(density_, positions, 0.01);
+        optimizer_density.Initialize();
+        //cout<<"check point1"<<endl;
+        for(int i = 0; i < 50; i++){
+            cout<<"i = " << i <<endl;
+            optimizer_density.Step();
+            printf("iter = %3lu, f = %9.4f\n, x = %9.4f, y = %9.4f", i,density_(positions) , positions[0].x, positions[0].y);
+        }
+    }
+    if(check_costfunction){
+        ObjectiveFunction cost_function(_placement, 0.1);
+        SimpleConjugateGradient optimizer_cost(cost_function, positions, 0.01);
+        optimizer_cost.Initialize();
+        for(int i = 0; i < 50; i++){
+            optimizer_cost.Step();
+            cout<<i<<endl;
+            printf("iter = %3lu, f = %9.4f\n, x = %9.4f, y = %9.4f", i,cost_function(positions) , positions[0].x, positions[0].y);
+        } 
+    }
+    
 
     ////////////////////////////////////////////////////////////////////
     // Write the placement result into the database. (You may modify this part.)
@@ -64,6 +91,7 @@ void GlobalPlacer::place() {
     for (size_t i = 0; i < num_modules; i++) {
         _placement.module(i).setPosition(positions[i].x, positions[i].y);
     }
+    cout<<"Global placement done!"<<endl;
 }
 
 void GlobalPlacer::plotPlacementResult(const string outfilename, bool isPrompt) {
