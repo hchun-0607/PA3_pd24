@@ -2,6 +2,7 @@
 
 #include "cstdio"
 #include <cassert>
+#include <cmath>
 
 ExampleFunction::ExampleFunction(Placement &placement) : BaseFunction(1), placement_(placement)
 {
@@ -124,21 +125,25 @@ Density::Density(Placement &placement, double max_density, int num_bins_x, int n
             center[i][j].second = placement.boundryBottom() + j * bin_size_y + bin_size_y / 2;
         }
     }
+    this->num_bins_x = num_bins_x;
+    this->num_bins_y = num_bins_y;
+    //cout<<"num_bins_x: "<<num_bins_x<<"  num_bins_y: "<<num_bins_y<<endl;
 }
 const double &Density::operator()(const std::vector<Point2<double>> &input){
-    cout<<"checkpoint2"<<endl;
+    cout<<"operator.."<<endl;
     value_ = 0;
     for(int i = 0; i < num_bins_x; i++){
         for(int j = 0; j < num_bins_y; j++){
             density_map[i][j]= 0;
         }
     }
+    //cout<<"checkpoint3"<<endl;
     for(int i = 0; i < num_bins_x; i++){
         for(int j = 0; j < num_bins_y; j++){
             for(int l = 0; l < placement.numModules(); l++){
                 double Px = 0, Py = 0;
                 double normalizer = 0;
-                double center_x = input[l].x - center[i][j].first  ;
+                double center_x = input[l].x - center[i][j].first;
                 double center_y = input[l].y - center[i][j].second;
                 double alpha_x = 4/((placement.module(l).width()+2*bin_size_x)*(placement.module(l).width()+4*bin_size_x));
                 double alpha_y = 4/((placement.module(l).height()+2*bin_size_y)*(placement.module(l).height()+4*bin_size_y));
@@ -162,26 +167,35 @@ const double &Density::operator()(const std::vector<Point2<double>> &input){
                 else{
                     Py = 0;
                 }
-                normalizer = placement.module(l).width() * placement.module(l).height() / (Px * Py);
+                normalizer = 1/placement.module(l).width() * placement.module(l).height() ;
+                //cout<<"Px:" << Px<<"  Py:"<<Py<<"  normalizer:"<<normalizer<<endl;
                 density_map[i][j] += Px * Py * normalizer;
+                //cout<<"density map..."<<density_map[i][j]<<endl;
             }
         }
     }
-    for(int i = 0; i < bin_size_x; i++){
-        for(int j = 0; j < bin_size_y; j++){
+    for(int i = 0; i < num_bins_x; i++){
+        for(int j = 0; j < num_bins_y; j++){
+            //cout<<"density map..."<<density_map[i][j]<<endl;
+            //cout<<"max density..."<<max_density<<endl;
+            //cout<<"density value....  "<<i<<"    "<<j<<"   "<< ((density_map[i][j] - max_density) )<<endl;
             value_ += (density_map[i][j] - max_density) * (density_map[i][j] - max_density);
+            //cout<<"density value....  "<<value_<<endl;
         }
     }
+    //cout<<"checkpoint4"<<endl;
     input_ = input;
-    cout<<"density value....  "<<value<<endl;
+    //cout<<"density value....  "<<value_<<endl;
     return value_;
 }
 
 const std::vector<Point2<double>> &Density::Backward(){
+    cout<<"backward..."<<endl;
     for(int i = 0; i < placement.numModules(); i++){
         grad_[i].x = 0;
         grad_[i].y = 0;
     }
+    density_diff_map.clear();
     density_diff_map.resize(num_bins_x);
     for(int i = 0; i < num_bins_x; i++){
         density_diff_map[i].resize(num_bins_y);
@@ -189,18 +203,16 @@ const std::vector<Point2<double>> &Density::Backward(){
             density_diff_map[i][j] = 0;
         }
     }
-    grad_.clear();
-    grad_.resize(placement.numModules());
     for(int i = 0 ;i < placement.numModules(); ++i){
+        double alpha_x = 4/((placement.module(i).width()+2*bin_size_x)*(placement.module(i).width()+4*bin_size_x));
+        double beta_x = 2/((placement.module(i).width()+4*bin_size_x) * bin_size_x);
+        double alpha_y = 4/((placement.module(i).height()+2*bin_size_y)*(placement.module(i).height()+4*bin_size_y));
+        double beta_y = 2/((placement.module(i).height()+4*bin_size_y) * bin_size_y);
         for(int j = 0; j < num_bins_x; j++){
             for(int k = 0; k < num_bins_y; k++){
                 double cen2cen_x = input_[i].x - center[j][k].first;
-                double alpha = 4/((placement.module(i).width()+2*bin_size_x)*(placement.module(i).width()+4*bin_size_x));
-                double beta = 2/((placement.module(i).width()+4*bin_size_x) * bin_size_x);
                 double Px_diff = 0;
                 double cen2cen_y = input_[i].y - center[j][k].second;
-                double alpha_y = 4/((placement.module(i).height()+2*bin_size_y)*(placement.module(i).height()+4*bin_size_y));
-                double beta_y = 2/((placement.module(i).height()+4*bin_size_y) * bin_size_y);
                 double Py_diff = 0;
                 double Px = 0, Py = 0;
                 if(abs(cen2cen_x) >= placement.module(i).width()/2 + 2*bin_size_x){
@@ -208,12 +220,12 @@ const std::vector<Point2<double>> &Density::Backward(){
                     Px = 0;
                 }
                 else if(abs(cen2cen_x) >= placement.module(i).width()/2 + bin_size_x){
-                    Px_diff = 2 * beta * (cen2cen_x - placement.module(i).width()/2 - 2*bin_size_x);
-                    Px = beta * (cen2cen_x - placement.module(i).width()/2 - 2*bin_size_x) * (cen2cen_x - placement.module(i).width()/2 - 2*bin_size_x);
+                    Px_diff = 2 * beta_x * (cen2cen_x - placement.module(i).width()/2 - 2*bin_size_x);
+                    Px = beta_x * (cen2cen_x - placement.module(i).width()/2 - 2*bin_size_x) * (cen2cen_x - placement.module(i).width()/2 - 2*bin_size_x);
                 }
                 else{
-                    Px_diff = -2 * alpha * cen2cen_x;
-                    Px = 1 - alpha * cen2cen_x * cen2cen_x;
+                    Px_diff = -2 * alpha_x * cen2cen_x;
+                    Px = 1 - alpha_x * cen2cen_x * cen2cen_x;
                 }
                 if(abs(cen2cen_y) >= placement.module(i).height()/2 + 2*bin_size_y){
                     Py_diff = 0;
@@ -227,13 +239,14 @@ const std::vector<Point2<double>> &Density::Backward(){
                     Py_diff = -2 * alpha_y * cen2cen_y;
                     Py = 1 - alpha_y * cen2cen_y * cen2cen_y;
                 }
-                double normalizer = placement.module(i).width() * placement.module(i).height() / (Px * Py);
+                double normalizer = (Px * Py)/placement.module(i).width() * placement.module(i).height();
                 grad_[i].x += 2 * (density_map[j][k] - max_density) * Px_diff * Py * normalizer;
                 grad_[i].y += 2 * (density_map[j][k] - max_density) * Px * Py_diff * normalizer;
                 
             }
         }
     }
+    
     return grad_;
 }
 ObjectiveFunction::ObjectiveFunction(Placement &placement, double lambda)

@@ -70,7 +70,7 @@ void GlobalPlacer::place() {
         for(int i = 0; i < 50; i++){
             cout<<"i = " << i <<endl;
             optimizer_density.Step();
-            printf("iter = %3lu, f = %9.4f\n, x = %9.4f, y = %9.4f", i,density_(positions) , positions[0].x, positions[0].y);
+            printf("iter = %3lu, f = %9.4f\n, x = %9.4f, y = %9.4f\n", i,density_(positions) , positions[0].x, positions[0].y);
         }
     }
     if(check_costfunction){

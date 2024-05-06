@@ -115,7 +115,7 @@ class Density : public BaseFunction {
     const std::vector<Point2<double>> &Backward() override;
 
     private:
-    double max_density = 1;
+    double max_density = 2;
     vector<vector<double>> density_map;
     Placement &placement;
     int num_bins_x;
