@@ -153,6 +153,9 @@ class ObjectiveFunction : public BaseFunction {
     double lambda_;
     Placement &placement_;
     vector<Point2<double>> input_;
+    vector<Point2<double>> grad_wirelength;
+    vector<Point2<double>> grad_density;
+    int iter_num ;
 };
 
 #endif  // OBJECTIVEFUNCTION_H

@@ -44,15 +44,16 @@ void GlobalPlacer::place() {
 
 
     // TODO: Implement your global placement algorithm here.
+    
     const size_t num_modules = _placement.numModules();  // You may modify this line.
     std::vector<Point2<double>> positions(num_modules);  // Optimization variables (positions of modules). You may modify this line.
     for(int i = 0; i < num_modules; i++){
-        positions[i].x = rand()%1000;
-        positions[i].y = rand()%1000;
+        positions[i].x = rand()%2000 - 1000;
+        positions[i].y = rand()%2000 - 1000;
     }
     bool check_wire = 0;
-    bool check_density = 1;
-    bool check_costfunction = 0;
+    bool check_density = 0;
+    bool check_costfunction = 1;
     if(check_wire){
         Wirelength wirelength_(_placement);
         SimpleConjugateGradient optimizer_wire(wirelength_, positions, 0.01);
@@ -63,11 +64,11 @@ void GlobalPlacer::place() {
         }
     }
     if(check_density){
-        Density density_(_placement, 0.8, 100, 100);
-        SimpleConjugateGradient optimizer_density(density_, positions, 0.01);
+        Density density_(_placement, 2, 100, 100);
+        SimpleConjugateGradient optimizer_density(density_, positions, 670);
         optimizer_density.Initialize();
         //cout<<"check point1"<<endl;
-        for(int i = 0; i < 50; i++){
+        for(int i = 0; i < 100; i++){
             cout<<"i = " << i <<endl;
             optimizer_density.Step();
             printf("iter = %3lu, f = %9.4f\n, x = %9.4f, y = %9.4f\n", i,density_(positions) , positions[0].x, positions[0].y);
@@ -75,7 +76,7 @@ void GlobalPlacer::place() {
     }
     if(check_costfunction){
         ObjectiveFunction cost_function(_placement, 0.1);
-        SimpleConjugateGradient optimizer_cost(cost_function, positions, 0.01);
+        SimpleConjugateGradient optimizer_cost(cost_function, positions, 567);
         optimizer_cost.Initialize();
         for(int i = 0; i < 50; i++){
             optimizer_cost.Step();
